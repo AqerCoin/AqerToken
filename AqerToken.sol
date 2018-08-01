@@ -73,13 +73,13 @@ contract Ownable {
  */
 contract Authorizable is Ownable {
   mapping(address => bool) public authorized;
-  
+
   event AuthorizationSet(address indexed addressAuthorized, bool indexed authorization);
 
   /**
    * @dev The Authorizable constructor sets the first `authorized` of the contract to the sender
    * account.
-   */ 
+   */
   constructor() public {
 	authorized[msg.sender] = true;
   }
@@ -100,7 +100,7 @@ contract Authorizable is Ownable {
     emit AuthorizationSet(addressAuthorized, authorization);
     authorized[addressAuthorized] = authorization;
   }
-  
+
 }
 
 
@@ -137,7 +137,7 @@ contract BasicToken is ERC20Basic {
   mapping(address => uint256) balances;
 
   /**
-  * @dev transfer token from an address to another specified address 
+  * @dev transfer token from an address to another specified address
   * @param _sender The address to transfer from.
   * @param _to The address to transfer to.
   * @param _value The amount to be transferred.
@@ -153,14 +153,14 @@ contract BasicToken is ERC20Basic {
     emit Transfer(_sender, _to, _value);
     return true;
   }
-  
+
   /**
   * @dev transfer token for a specified address (BasicToken transfer method)
   */
   function transfer(address _to, uint256 _value) public returns (bool) {
 	return transferFunction(msg.sender, _to, _value);
   }
-  
+
   /**
   * @dev Gets the balance of the specified address.
   * @param _owner The address to query the the balance of.
@@ -173,7 +173,7 @@ contract BasicToken is ERC20Basic {
 
 contract ERC223TokenCompatible is BasicToken {
   using SafeMath for uint256;
-  
+
   event Transfer(address indexed from, address indexed to, uint256 value, bytes indexed data);
 
   // Function that is called when a user or another contract wants to transfer funds .
@@ -185,8 +185,8 @@ contract ERC223TokenCompatible is BasicToken {
         balances[msg.sender] = balances[msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
 		if( isContract(_to) ) {
-			_to.call.value(0)(bytes4(keccak256(_custom_fallback)), msg.sender, _value, _data);
-		} 
+			require(_to.call.value(0)(bytes4(keccak256(_custom_fallback)), msg.sender, _value, _data));
+		}
 		emit Transfer(msg.sender, _to, _value, _data);
 		return true;
 	}
@@ -382,7 +382,7 @@ contract BurnToken is StandardToken {
         emit Burn(_burner, _value);
 		return true;
     }
-    
+
     /**
      * @dev Burns a specific amount of tokens.
      * @param _value The amount of token to be burned.
@@ -390,7 +390,7 @@ contract BurnToken is StandardToken {
 	function burn(uint256 _value) public returns(bool) {
         return burnFunction(msg.sender, _value);
     }
-	
+
 	/**
 	* @dev Burns tokens from one address
 	* @param _from address The address which you want to burn tokens from
@@ -408,7 +408,6 @@ contract Token is ERC223TokenCompatible, StandardToken, StartToken, HumanStandar
     string public name;
     string public symbol;
     uint8 public decimals;
-    uint256 public totalSupply;
     constructor(string _name, string _symbol, uint8 _decimals, uint256 _totalSupply) public {
         name = _name;
         symbol = _symbol;
@@ -419,7 +418,7 @@ contract Token is ERC223TokenCompatible, StandardToken, StartToken, HumanStandar
 }
 
 contract TokenBurn is Token, BurnToken {
-    constructor(string _name, string _symbol, uint8 _decimals, uint256 _totalSupply) public 
+    constructor(string _name, string _symbol, uint8 _decimals, uint256 _totalSupply) public
     Token(_name, _symbol, _decimals, _totalSupply) {
         initialSupply = totalSupply;
     }
